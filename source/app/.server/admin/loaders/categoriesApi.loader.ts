@@ -6,9 +6,7 @@ import { ECategoriesSortVariant } from "~/admin/components/categories/Index/Filt
 import { ESoftDeleteStatus } from "~/admin/constants/entries.constant";
 import { categoryApiMapper } from "../mappers/categoryApi.mapper";
 import {
-  hasNextCalculate,
   makeQuery,
-  queryToPagination,
   queryToSearch,
   queryToSort,
   requestToSearchParams,
@@ -25,7 +23,6 @@ export async function categoriesApiLoader({request}: LoaderFunctionArgs){
     searchParams
   );
   const search = await queryToSearch(searchParams);
-  const pagination = await queryToPagination(searchParams);
   const sort = await queryToSort(searchParams, ECategoriesSortVariant, ECategoriesSortVariant.createdAt_desc);
   const orderBy = sortValueToField<CategoryOrderByWithRelationInput>(sort);
 
@@ -56,8 +53,7 @@ export async function categoriesApiLoader({request}: LoaderFunctionArgs){
   }
 
   const categories = await prisma.category.findMany({
-    take: pagination.take,
-    skip: pagination.skip,
+    take: 10,
     where: {
       ...searchQuery,
       ...filterAccountStatusQuery,
@@ -65,21 +61,5 @@ export async function categoriesApiLoader({request}: LoaderFunctionArgs){
     orderBy
   });
 
-  pagination.count = categories.length;
-  pagination.total = await prisma.category.count({
-    where: {
-      ...searchQuery,
-      ...filterAccountStatusQuery,
-    }
-  });
-
-  pagination.hasNext = hasNextCalculate(pagination);
-
-  const categories = await prisma.category.findMany({
-    where: {
-      deletedAt: null
-    }
-  });
-
-  return json({categories: categories.map(categoryApiMapper), query: makeQuery(search, sort, data), pagination});
+  return json({categories: categories.map(categoryApiMapper), query: makeQuery(search, sort, data)});
 }
