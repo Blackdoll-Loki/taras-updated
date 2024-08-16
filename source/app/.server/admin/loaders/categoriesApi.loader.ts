@@ -56,7 +56,7 @@ export async function categoriesApiLoader({request}: LoaderFunctionArgs){
     take: 10,
     where: {
       ...searchQuery,
-      ...filterAccountStatusQuery,
+      deletedAt: null
     },
     orderBy
   });
